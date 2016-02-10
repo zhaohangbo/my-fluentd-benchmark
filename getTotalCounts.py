@@ -17,19 +17,27 @@ def main():
         with open(file_path,"a+") as f:
             count = 0
             for line in f:
-                count += int(line.split('"count":')[1].split(',')[0])
+                if "traffic.metrics" in line:
+                    count += int(line.split('"count":')[1].split(',')[0])
+                elif line.startswith("-----"):
+                    count = 0
+   		else:
+		    pass
             if(sys.argv[3]=='-as_agent'):
-                print("---------------- Totally sent " + str(count) + " messages ! ----------------")
-                print("                                                                            ")
-                f.write("                                                                            ")
-                f.write("---------------- Totally sent " + str(count) + " messages ! ----------------")
-                f.write("                                                                            ")
+                print("--------- Totally sent " + str(count) + " messages ! ---------")
+                print("    \n")
+                f.write("    \n")
+                f.write("---------------- Totally sent " + str(count) + " messages ! ---------")
+                f.write("    \n")
             elif(sys.argv[3]=='-as_receiver'):
-                print("---------------- Totally received " + str(count) + " messages ! ----------------")
-                print("                                                                            ")
-                f.write("                                                                            ")
-                f.write("---------------- Totally received " + str(count) + " messages ! ----------------")
-                f.write("                                                                            ")
-
+                print("--------- Totally received " + str(count) + " messages ! ---------")
+                print("    \n")
+                f.write("    \n")
+                f.write("--------- Totally received " + str(count) + " messages ! ---------")
+                f.write("    \n")
+            else:
+                print("-as_agent or -as_receiver")
+                print("Usage: getTotalCounts  -p file_pith -as_agent or -as_receiver")
+                sys.exit(-1)
 if __name__ == "__main__":
   main()
