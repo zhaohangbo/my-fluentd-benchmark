@@ -95,3 +95,4 @@
 2016-02-08T16:07:35-08:00	traffic.metrics	{"count":0,"bytes":0,"count_rate":0.0,"bytes_rate":0.0}
 2016-02-08T16:08:35-08:00	traffic.metrics	{"count":0,"bytes":0,"count_rate":0.0,"bytes_rate":0.0}
 2016-02-08T16:09:35-08:00	traffic.metrics	{"count":0,"bytes":0,"count_rate":0.0,"bytes_rate":0.0}
+                                                                            ---------------- Totally sent 766592 messages ! ----------------                                                                            
