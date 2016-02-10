@@ -19,8 +19,8 @@ def main():
             for line in f:
                 if "traffic.metrics" in line:
                     count += int(line.split('"count":')[1].split(',')[0])
-                elif line.startswith("-----"):
-                    count = 0
+                #elif line.startswith("-----"):
+                #    count = 0
    		else:
 		    pass
             if(sys.argv[3]=='-as_agent'):
