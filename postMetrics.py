@@ -8,7 +8,6 @@ import errno
 import datetime
 import subprocess
 import random
-messages_per_sec= 100 #  messages/sec   how many messages you sent per second
 
 
 #url = "http://10.10.10.11:8888/collectd"
