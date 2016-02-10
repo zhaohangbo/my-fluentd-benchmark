@@ -7,12 +7,40 @@ import os
 import errno
 import datetime
 import subprocess
+import random
 messages_per_sec= 100 #  messages/sec   how many messages you sent per second
 
 
-url = "http://10.10.10.11:8888/collectd"
+#url = "http://10.10.10.11:8888/collectd"
+url = "http://10.0.0.98:8888/collectd"
 data = {'sender': 'Hangbo_Metrics'}
-data2= {"names": ["J.J.", "April"], "years": [25, 29]}
+
+metric_sample= {  
+    "values": [1934546],
+    "dstypes": ["derive"],
+    "dsnames": ["value"],
+    "interval": 10,
+    "host": "zookeeper-2.zeus-test.va1.ciscozeus.io",
+    "plugin": "cpu",
+    "plugin_instance": "0",
+    "type": "cpu",
+    "type_instance": "wait",
+    "timestamp": "2016-02-10 21:41:07 +0000",
+    "in_time": "2016-02-10 21:41:07 +0000",
+    "tag": "metrics.collectd.randomuser-internal_token”
+}
+log_sample={
+    "host": "postgres-1",
+    "ident": "CRON",
+    "pid": "31459,"
+    "message": "pam_unix(cron:session): session opened for user postgres by (uid=0)",
+    "timestamp": "2016-02-10 21:41:01 +0000",
+    "in_time": "2016-02-10 21:41:01 +0000",
+    "tag": "logs.syslog.authpriv.info.randomuser-internal_token"
+}
+
+
+
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 def getLenInUtf8(s):
     return len(s.encode('utf-8'))
@@ -34,8 +62,11 @@ one_mb_msg = one_kb_msg * 1024+ one_kb_msg*38+'Two roads diverged in a wood,.' +
 RATE_INPUT = 'no input'       # -r <bytes/seconds>
 Num_INPUT  = 'no input'       # -n <numbersOfMsg/second>
 
-
-
+def get_zero_or_one():
+    if bool(random.getrandbits(1)) == True:
+        return 1
+    else:
+        return 0
 
 def get_msg_of_specific_bytes(bytes_per_second):
     msg =''
@@ -214,9 +245,13 @@ def main():
       if len(sys.argv) >=4:
           print " get in len(sys.argv) >=4:  "
           if len(sys.argv)==4:
-              print('missing json content to input')
+              if str(sys.argv[3])=='-json_metric_sample':
+              	 j_content = metric_sample
+              elif str(sys.argv[3])=='-json_log_sample':
+              	 j_content = log_sample
+              else:
+              	 print('missing json content to input')
           elif sys.argv[3]=='-json' and len(sys.argv)==5:
-              #j_content = json.dumps(sys.argv[4])  wrong
               j_content = json.loads(sys.argv[4])  # use loads
               print('j_content  : ', j_content)
           else:
