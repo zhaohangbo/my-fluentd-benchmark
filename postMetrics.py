@@ -15,7 +15,7 @@ messages_per_sec= 100 #  messages/sec   how many messages you sent per second
 url = "http://10.0.0.98:8888/collectd"
 data = {'sender': 'Hangbo_Metrics'}
 
-metric_sample= {  
+metric_sample= {
     "values": [1934546],
     "dstypes": ["derive"],
     "dsnames": ["value"],
@@ -27,7 +27,7 @@ metric_sample= {
     "type_instance": "wait",
     "timestamp": "2016-02-10 21:41:07 +0000",
     "in_time": "2016-02-10 21:41:07 +0000",
-    "tag": "metrics.collectd.randomuser-internal_token”
+    "tag": "metrics.collectd.randomuser-internal_token"
 }
 log_sample={
     "host": "postgres-1",
