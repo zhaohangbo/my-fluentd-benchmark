@@ -96,17 +96,26 @@ def post_metrics_bytes_per_second(bytes_per_second, msg_of_specific_bytes):
     respon = requests.post(url, data=json_str, headers=headers)
     printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
     time.sleep(1)  # sleep 1 second
-
+    
 def post_metrics_numbers_per_second(numbers_per_second, intput_json_data):
     if intput_json_data is None:
         intput_json_data= data
     time1 = datetime.datetime.now()
-    for i in range(0,numbers_per_second):
-        json_str =json.dumps(intput_json_data)
-        msg_len_in_utf8 = getLenInUtf8(json_str)
-        msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
-        respon = requests.post(url, data=json_str , headers=headers)
-        printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
+    
+    times_of_thousands = int(numbers_per_second/1000)
+    for i in range(0, numbers_per_second):
+	try:
+		for j in range(0,1000):
+	        	json_str =json.dumps(intput_json_data)
+        		msg_len_in_utf8 = getLenInUtf8(json_str)
+	        	msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
+        		respon = requests.post(url, data=json_str , headers=headers)
+	        	printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
+	except requests.exceptions.ConnectionError:
+		print("No connection could be made because the target machine actively refused it")
+		time.sleep(0.5)
+		pass
+	time.sleep(2/1000.0)
 
     time2  = datetime.datetime.now()
     time_passed = time2 - time1
