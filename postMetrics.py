@@ -10,8 +10,8 @@ import subprocess
 import random
 
 
-#url = "http://10.10.10.11:8888/collectd"
-url = "http://10.0.0.98:8888/collectd"
+url = "http://10.10.10.11:8888/collectd"
+#url = "http://10.0.0.98:8888/collectd"
 data = {'sender': 'Hangbo_Metrics'}
 
 metric_sample= {
@@ -99,23 +99,15 @@ def post_metrics_bytes_per_second(bytes_per_second, msg_of_specific_bytes):
     
 def post_metrics_numbers_per_second(numbers_per_second, intput_json_data):
     if intput_json_data is None:
+        print('intput_json_data is none!!!',intput_json_data,'Use default json data')
         intput_json_data= data
     time1 = datetime.datetime.now()
-    
-    times_of_thousands = int(numbers_per_second/1000)
-    for i in range(0, numbers_per_second):
-	try:
-		for j in range(0,1000):
-	        	json_str =json.dumps(intput_json_data)
-        		msg_len_in_utf8 = getLenInUtf8(json_str)
-	        	msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
-        		respon = requests.post(url, data=json_str , headers=headers)
-	        	printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
-	except requests.exceptions.ConnectionError:
-		print("No connection could be made because the target machine actively refused it")
-		time.sleep(0.5)
-		pass
-	time.sleep(2/1000.0)
+    for i in range(0,numbers_per_second):
+        json_str =json.dumps(intput_json_data)
+        msg_len_in_utf8 = getLenInUtf8(json_str)
+        msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
+        respon = requests.post(url, data=json_str , headers=headers)
+        printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
 
     time2  = datetime.datetime.now()
     time_passed = time2 - time1
@@ -125,6 +117,33 @@ def post_metrics_numbers_per_second(numbers_per_second, intput_json_data):
         time.sleep(ms_left/1000.0)
     else:
         print('can not post'+numbers_per_second+'in 1 seconds , totally needs'+ str(1-ms_left/1000.0)+'seconds')
+
+#def post_metrics_numbers_per_second(numbers_per_second, intput_json_data):
+#    if intput_json_data is None:
+#        intput_json_data= data
+#    time1 = datetime.datetime.now()
+#    times_of_thousands = int(numbers_per_second/1000)
+#    for i in range(0, numbers_per_second):
+#        try:
+#                for j in range(0,1000):
+#                        json_str =json.dumps(intput_json_data)
+#                        msg_len_in_utf8 = getLenInUtf8(json_str)
+#                        msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
+#                        respon = requests.post(url, data=json_str , headers=headers)
+#                        printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
+#        except requests.exceptions.ConnectionError:
+#                print("No connection could be made because the target machine actively refused it")
+#                time.sleep(0.5)
+#                pass
+#        time.sleep(2/1000.0)
+#    time2  = datetime.datetime.now()
+#    time_passed = time2 - time1
+#    ms_left = (1000-time_passed.total_seconds())
+#    print ('ms_left :',ms_left,' ms')
+#    if ms_left > 0:
+#        time.sleep(ms_left/1000.0)
+#    else:
+#        print('can not post'+numbers_per_second+'in 1 seconds , totally needs'+ str(1-ms_left/1000.0)+'seconds')
 
 path ='/var/log/td-agent/perf_results/'
 

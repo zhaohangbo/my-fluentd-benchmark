@@ -16,7 +16,7 @@ list_post_cases=[
 #'./postMetrics.py  -n 15000 -json_log_sample '
 ]
 for t in range(1,101):
-    n_per_sec = t * 5000
+    n_per_sec = t * 500000
     list_post_cases.append('./postMetrics.py -n ' + str(n_per_sec) +' -json_metric_sample')
     list_post_cases.append('./postMetrics.py -n ' + str(n_per_sec) +' -json_log_sample')
 
@@ -25,7 +25,7 @@ list_record_cases=[
 #'./callRecordSubprocess.py -n 5000'
 ]
 for t in range(1,101):
-    n_per_sec = t * 5000
+    n_per_sec = t * 500000
     list_record_cases.append('./callRecordSubprocess.py -n '+ str(n_per_sec))
     list_record_cases.append('./callRecordSubprocess.py -n '+ str(n_per_sec))
 
