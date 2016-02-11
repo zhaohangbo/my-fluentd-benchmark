@@ -31,7 +31,7 @@ metric_sample= {
 log_sample={
     "host": "postgres-1",
     "ident": "CRON",
-    "pid": "31459,"
+    "pid": "31459,",
     "message": "pam_unix(cron:session): session opened for user postgres by (uid=0)",
     "timestamp": "2016-02-10 21:41:01 +0000",
     "in_time": "2016-02-10 21:41:01 +0000",

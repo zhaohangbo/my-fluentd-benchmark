@@ -26,8 +26,8 @@ list_record_cases=[
 ]
 for t in range(1,101):
     n_per_sec = t * 5000
-    list_record_cases.append('./callRecordSubprocess.py -n '+ n_per_sec)
-    list_record_cases.append('./callRecordSubprocess.py -n '+ n_per_sec)
+    list_record_cases.append('./callRecordSubprocess.py -n '+ str(n_per_sec))
+    list_record_cases.append('./callRecordSubprocess.py -n '+ str(n_per_sec))
 
 logdir='/var/log/td-agent/flow' # path to your log directory
 
