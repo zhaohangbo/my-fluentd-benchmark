@@ -8,7 +8,7 @@ import errno
 import datetime
 import subprocess
 import random
-
+import threading
 
 url = "http://10.10.10.11:8888/collectd"
 #url = "http://10.0.0.98:8888/collectd"
@@ -72,6 +72,28 @@ def get_zero_or_one():
     else:
         return 0
 
+
+class myPostThread (threading.Thread):
+    def __init__(self, threadID, name, numbers_per_second,json_str, flag):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.numbers_per_second= numbers_per_second
+        self.json_str=json_str
+        self.flag=flag
+    def run(self):
+        print "Starting " + self.name
+        if self.flag =='_n_':
+            post_metrics_numbers_per_second(self.numbers_per_second, self.json_str)
+        elif self.flag=='_r_':
+            pass
+        elif self.flag=='_n_b_':
+            pass
+        else:
+            pass
+        print "Exiting " + self.name
+
+
 def get_msg_of_specific_bytes(bytes_per_second):
     msg =''
     bytes_per_second = int(bytes_per_second)
@@ -98,10 +120,11 @@ def post_metrics_n_b(numbers_per_second, j_str_of_specific_bytes):
         msg_size_in_bytes= getSizeInBytes(j_str_of_specific_bytes) #Return the size of object in bytes.
         respon = requests.post(url, data=j_str_of_specific_bytes , headers=headers)
         printResults(None,msg_size_in_bytes,respon)
+        print('posted ',i,'times')
 
     time2  = datetime.datetime.now()
     time_passed = time2 - time1
-    ms_left = (1000-time_passed.total_seconds())
+    ms_left = (1000-time_passed.total_seconds()*1000)
     print ('ms_left :',ms_left,' ms')
     if ms_left > 0:
         time.sleep(ms_left/1000.0)
@@ -117,20 +140,21 @@ def post_metrics_bytes_per_second( j_str):
 
 def post_metrics_numbers_per_second(numbers_per_second, json_str):
     time1 = datetime.datetime.now()
-    for i in range(0,numbers_per_second):
+    for i in range(0 ,numbers_per_second):
         msg_len_in_utf8 = getLenInUtf8(json_str)
         msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
         respon = requests.post(url, data=json_str , headers=headers)
         printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
+        print('posted ',i,'times')
 
     time2  = datetime.datetime.now()
     time_passed = time2 - time1
-    ms_left = (1000-time_passed.total_seconds())
+    ms_left = (1000-time_passed.total_seconds()*1000)
     print ('ms_left :',ms_left,' ms')
     if ms_left > 0:
         time.sleep(ms_left/1000.0)
     else:
-        print('can not post'+numbers_per_second+'in 1 seconds , totally needs'+ str(1-ms_left/1000.0)+'seconds')
+        print('can not post'+str(numbers_per_second)+'in 1 seconds , totally needs'+ str(1-ms_left/1000.0)+'seconds')
 
 #def post_metrics_numbers_per_second(numbers_per_second, intput_json_data):
 #    if intput_json_data is None:
@@ -152,7 +176,7 @@ def post_metrics_numbers_per_second(numbers_per_second, json_str):
 #        time.sleep(2/1000.0)
 #    time2  = datetime.datetime.now()
 #    time_passed = time2 - time1
-#    ms_left = (1000-time_passed.total_seconds())
+#    ms_left = (1000-time_passed.total_seconds()*1000)
 #    print ('ms_left :',ms_left,' ms')
 #    if ms_left > 0:
 #        time.sleep(ms_left/1000.0)
@@ -239,7 +263,9 @@ def kill_recording_process():
 
 #Usage: postMetrics -n <bytes/seconds> or -b <numbersOfMsg/second> with -j <json_content>
 
-
+def createThread( n ,numbers_per_second,json_str,flag ):
+    for i in range(0,n):
+        myPostThread(i, "Thread-"+str(i), numbers_per_second,json_str,flag).start()
 
 def main():
   if len(sys.argv) <= 1:
@@ -293,11 +319,11 @@ def main():
           print " get in len(sys.argv) >=4:  "
           if len(sys.argv)==4:
               if str(sys.argv[3])=='-json_metric_sample':
-              	 intput_json = metric_sample
+                  intput_json = metric_sample
               elif str(sys.argv[3])=='-json_log_sample':
-              	 intput_json = log_sample
+                  intput_json = log_sample
               else:
-              	 print('missing json content to input')
+                  print('missing json content to input')
           elif sys.argv[3]=='-json' and len(sys.argv)==5:
               intput_json = json.loads(sys.argv[4])  # use loads
               print('j_content  : ', intput_json)
@@ -311,11 +337,20 @@ def main():
       json_str =json.dumps(intput_json)
       begin_time   = time.time()
       exec_time_left=time.time() - begin_time
+
+      # Create new threads
+      #createThread( 10 ,numbers_per_second,json_str,'_n_')
+      #time.sleep(60)
+      #createThread( 10 ,numbers_per_second,json_str,'_n_')
+      #time.sleep(60)
+      #createThread( 10 ,numbers_per_second,json_str,'_n_')
+      #time.sleep(60)
       #Run 5 mins
       while exec_time_left < 300:
           post_metrics_numbers_per_second(numbers_per_second, json_str)
-	  exec_time_left= time.time() - begin_time
-	  print('exec_time_left:',exec_time_left)
+          exec_time_left= time.time() - begin_time
+          print('exec_time_left:',exec_time_left)
+
       kill_recording_process()
 
 
