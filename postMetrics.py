@@ -12,7 +12,9 @@ import random
 
 url = "http://10.10.10.11:8888/collectd"
 #url = "http://10.0.0.98:8888/collectd"
-data = {'sender': 'Hangbo_Metrics'}
+
+numbers_per_second=500
+metric_base={"a":"a"}
 
 metric_sample= {
     "values": [1934546],
@@ -46,9 +48,12 @@ def getLenInUtf8(s):
 def getSizeInBytes(s):
     return sys.getsizeof(s)
 def printResults(msg_len_in_utf8,msg_size_in_bytes,respon):
-    print('jutf8_len: ',msg_len_in_utf8)
-    print('size of object in bytes', msg_size_in_bytes)
-    print('respon',respon)
+    if msg_len_in_utf8!=None:
+        print('jutf8_len: ',msg_len_in_utf8)
+    if msg_size_in_bytes!=None:
+        print('size of object in bytes', msg_size_in_bytes)
+    if respon!=None:
+        print('respon',respon)
 
 one_hundred_byte_msg='Two roads diverged in a wood, and I took the one less traveled.'
 one_kb_msg = one_hundred_byte_msg*15+'Two roads diverged in a wood, and I took t'
@@ -87,23 +92,32 @@ def get_msg_of_specific_bytes(bytes_per_second):
         diff = bytes_per_second - sys.getsizeof(msg)
     return msg
 
-def post_metrics_bytes_per_second(bytes_per_second, msg_of_specific_bytes):
-    a_dict = {"msg":msg_of_specific_bytes}
-    data.update(a_dict)
-    json_str =json.dumps(data)
-    msg_len_in_utf8 = getLenInUtf8(json_str)
-    msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
-    respon = requests.post(url, data=json_str, headers=headers)
-    printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
-    time.sleep(1)  # sleep 1 second
-    
-def post_metrics_numbers_per_second(numbers_per_second, intput_json_data):
-    if intput_json_data is None:
-        print('intput_json_data is none!!!',intput_json_data,'Use default json data')
-        intput_json_data= data
+def post_metrics_n_b(numbers_per_second, j_str_of_specific_bytes):
     time1 = datetime.datetime.now()
     for i in range(0,numbers_per_second):
-        json_str =json.dumps(intput_json_data)
+        msg_size_in_bytes= getSizeInBytes(j_str_of_specific_bytes) #Return the size of object in bytes.
+        respon = requests.post(url, data=j_str_of_specific_bytes , headers=headers)
+        printResults(None,msg_size_in_bytes,respon)
+
+    time2  = datetime.datetime.now()
+    time_passed = time2 - time1
+    ms_left = (1000-time_passed.total_seconds())
+    print ('ms_left :',ms_left,' ms')
+    if ms_left > 0:
+        time.sleep(ms_left/1000.0)
+    else:
+        print('can not post'+numbers_per_second+'in 1 seconds , totally needs'+ str(1-ms_left/1000.0)+'seconds')
+
+def post_metrics_bytes_per_second( j_str):
+    msg_len_in_utf8 = getLenInUtf8(j_str)
+    msg_size_in_bytes= getSizeInBytes(j_str) #Return the size of object in bytes.
+    respon = requests.post(url, data=j_str, headers=headers)
+    printResults(msg_len_in_utf8,msg_size_in_bytes,respon)
+    time.sleep(1)  # sleep 1 second
+
+def post_metrics_numbers_per_second(numbers_per_second, json_str):
+    time1 = datetime.datetime.now()
+    for i in range(0,numbers_per_second):
         msg_len_in_utf8 = getLenInUtf8(json_str)
         msg_size_in_bytes= getSizeInBytes(json_str) #Return the size of object in bytes.
         respon = requests.post(url, data=json_str , headers=headers)
@@ -176,63 +190,38 @@ def mkdir_p(path):
         else:
             raise
 
-def touchFiles(bytes_per_second , postfix):
-    bytes_per_second = str(bytes_per_second)
+def touchFiles(prefix , postfix):
+    prefix = str(prefix)
     postfix = str(postfix)
-    if not os.path.isfile(path + iostat_file + bytes_per_second + postfix):
-        open(path+iostat_file + bytes_per_second + postfix, "a+").close()
-    if not os.path.isfile(path+vmstat_file + bytes_per_second + postfix):
-        open(path+vmstat_file + bytes_per_second + postfix, "a+").close()
-    if not os.path.isfile(path+dstat_file + bytes_per_second + postfix):
-        open(path+dstat_file + bytes_per_second + postfix, "a+").close()
-    if not os.path.isfile(path+free_file + bytes_per_second + postfix):
-        open(path+free_file + bytes_per_second + postfix, "a+").close()
-    if not os.path.isfile(path+top_file + bytes_per_second + postfix):
-        open(path+top_file + bytes_per_second + postfix, "a+").close()
+    if not os.path.isfile(path + iostat_file + prefix + postfix):
+        open(path+iostat_file + prefix + postfix, "a+").close()
+    if not os.path.isfile(path+vmstat_file + prefix + postfix):
+        open(path+vmstat_file + prefix + postfix, "a+").close()
+    if not os.path.isfile(path+dstat_file + prefix + postfix):
+        open(path+dstat_file + prefix + postfix, "a+").close()
+    if not os.path.isfile(path+free_file + prefix + postfix):
+        open(path+free_file + prefix + postfix, "a+").close()
+    if not os.path.isfile(path+top_file + prefix + postfix):
+        open(path+top_file + prefix + postfix, "a+").close()
 
-def form_cmd_r(bytes_per_second):
-    bytes_per_second=str(bytes_per_second)
+def form_cmd (prefix,postfix):
+    prefix=str(prefix)
+    postfix=str(postfix)
     global iostat_cmd
-    iostat_cmd='iostat -dkxt 1 >> ' + path + iostat_file + bytes_per_second+'_r_' +' &'
+    iostat_cmd='iostat -dkxt 1 >> ' + path + iostat_file + prefix+postfix +' &'
     global vmstat_cmd
-    vmstat_cmd ='vmstat 1 >> ' + path + vmstat_file + bytes_per_second +'_r_' +' &'
+    vmstat_cmd ='vmstat 1 >> ' + path + vmstat_file + prefix +postfix +' &'
     global dstat_cmd
-    dstat_cmd ='dstat >> ' + path + dstat_file + bytes_per_second +'_r_' +' &'
+    dstat_cmd ='dstat >> ' + path + dstat_file + prefix +postfix +' &'
     global free_cmd
-    free_cmd ='free >> ' + path+free_file + bytes_per_second +'_r_' +' &'
+    free_cmd ='free >> ' + path+free_file + prefix +postfix +' &'
     global top_cmd
-    top_cmd ='top -c >> '+ path + top_file + bytes_per_second +'_r_' +' &'
+    top_cmd ='top -c >> '+ path + top_file + prefix +postfix +' &'
 
-def form_cmd_n(bytes_per_second):
-    bytes_per_second=str(bytes_per_second)
-    global iostat_cmd
-    iostat_cmd='iostat -dkxt 1 >> ' + path + iostat_file + bytes_per_second+'_n_' +' &'
-    global vmstat_cmd
-    vmstat_cmd ='vmstat 1 >> ' + path + vmstat_file + bytes_per_second +'_n_' +' &'
-    global dstat_cmd
-    dstat_cmd ='dstat >> ' + path + dstat_file + bytes_per_second +'_n_' +' &'
-    global free_cmd
-    free_cmd ='free >> ' + path+free_file + bytes_per_second +'_n_' +' &'
-    global top_cmd
-    top_cmd ='top -c >> '+ path + top_file + bytes_per_second +'_n_' +' &'
-
-def record_sys_status_to_log_r(bytes_per_second):
-    bytes_per_second = str(bytes_per_second)
+def record_sys_status_to_log( prefix , postfix):
     mkdir_p(path)
-    touchFiles(bytes_per_second,'_r_')
-    form_cmd_r(bytes_per_second)
-    print(iostat_cmd,vmstat_cmd,dstat_cmd,free_cmd)
-    subprocess.call(iostat_cmd, shell=True)
-    subprocess.call(vmstat_cmd, shell=True)
-    subprocess.call(dstat_cmd, shell=True)
-    subprocess.call(free_cmd, shell=True)
-    #subprocess.call(top_cmd, shell=True)
-
-def record_sys_status_to_log_n(bytes_per_second):
-    bytes_per_second = str(bytes_per_second)
-    mkdir_p(path)
-    touchFiles(bytes_per_second,'_n_')
-    form_cmd_n(bytes_per_second)
+    touchFiles(prefix, postfix)
+    form_cmd(prefix, postfix)
     print(iostat_cmd,vmstat_cmd,dstat_cmd,free_cmd)
     subprocess.call(iostat_cmd, shell=True)
     subprocess.call(vmstat_cmd, shell=True)
@@ -247,49 +236,84 @@ def kill_recording_process():
     subprocess.call(free_kill, shell=True)
     #subprocess.call(top_kill, shell=True)
 
+
+#Usage: postMetrics -n <bytes/seconds> or -b <numbersOfMsg/second> with -j <json_content>
+
+
+
 def main():
   if len(sys.argv) <= 1:
+    print("Usage: postMetrics -n <numbersOfMsg/second> and -b <bytes/msg> ")
     print("Usage: postMetrics -r <bytes/seconds> or -n <numbersOfMsg/second> with -j <json_content>")
     sys.exit(-1)
 
-  if sys.argv[1] == '-r':
-      bytes_per_second =int(sys.argv[2])
-      msg_of_specific_bytes = get_msg_of_specific_bytes(bytes_per_second)
+  if sys.argv[1] == '-n' and sys.argv[3] == '-b':
+      numbers_per_second =int(sys.argv[2])
+      bytes_per_msg      =int(sys.argv[4])
+      if bytes_per_msg>0:
+          msg_of_specific_bytes = get_msg_of_specific_bytes(bytes_per_msg)
+          metric_base.update({"msg":msg_of_specific_bytes})
+      else:
+          #bytes_per_msg<0 use default min metric_base
+          pass
 
-      record_sys_status_to_log_r(bytes_per_second)
+      j_str_of_specific_bytes =json.dumps(metric_base)
+
+      record_sys_status_to_log( str(numbers_per_second)+'_'+str(bytes_per_msg) , '_n_b_')
       begin_time   = time.time()
       exec_time_left=time.time() - begin_time
 
       while exec_time_left < 300:
-         post_metrics_bytes_per_second(bytes_per_second,msg_of_specific_bytes)
-	 exec_time_left= time.time() - begin_time
+         post_metrics_n_b( numbers_per_second, j_str_of_specific_bytes)
+
+      exec_time_left= time.time() - begin_time
+      print('exec_time_left:',exec_time_left)
+      kill_recording_process()
+
+  if sys.argv[1] == '-r':
+      bytes_per_second =int(sys.argv[2])
+      msg_of_specific_bytes = get_msg_of_specific_bytes(bytes_per_second)
+      metric_base.update({"msg":msg_of_specific_bytes})
+      j_str_of_specific_bytes =json.dumps(metric_base)
+      record_sys_status_to_log( str(bytes_per_second) , '_b_')
+
+      begin_time   = time.time()
+      exec_time_left=time.time() - begin_time
+
+      while exec_time_left < 300:
+         post_metrics_bytes_per_second( j_str_of_specific_bytes)
+         exec_time_left= time.time() - begin_time
          print('exec_time_left:',exec_time_left)
       kill_recording_process()
 
   elif sys.argv[1] == '-n':
       numbers_per_second =int(sys.argv[2])
-      j_content = None
+      intput_json = None
       if len(sys.argv) >=4:
           print " get in len(sys.argv) >=4:  "
           if len(sys.argv)==4:
               if str(sys.argv[3])=='-json_metric_sample':
-              	 j_content = metric_sample
+              	 intput_json = metric_sample
               elif str(sys.argv[3])=='-json_log_sample':
-              	 j_content = log_sample
+              	 intput_json = log_sample
               else:
               	 print('missing json content to input')
           elif sys.argv[3]=='-json' and len(sys.argv)==5:
-              j_content = json.loads(sys.argv[4])  # use loads
-              print('j_content  : ', j_content)
+              intput_json = json.loads(sys.argv[4])  # use loads
+              print('j_content  : ', intput_json)
           else:
               print("Usage: postMetrics -r <bytes/seconds> or -n <numbersOfMsg/second> or -j <json_content>")
 
-      record_sys_status_to_log_n(numbers_per_second)
+      record_sys_status_to_log( str(numbers_per_second) , '_n_')
+      if intput_json is None:
+          print('intput_json_data is none!!!',intput_json,'Use default json data')
+          intput_json= metric_base
+      json_str =json.dumps(intput_json)
       begin_time   = time.time()
       exec_time_left=time.time() - begin_time
       #Run 5 mins
       while exec_time_left < 300:
-          post_metrics_numbers_per_second(numbers_per_second, j_content)
+          post_metrics_numbers_per_second(numbers_per_second, json_str)
 	  exec_time_left= time.time() - begin_time
 	  print('exec_time_left:',exec_time_left)
       kill_recording_process()
