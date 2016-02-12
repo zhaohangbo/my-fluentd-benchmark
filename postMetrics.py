@@ -9,7 +9,7 @@ import datetime
 import subprocess
 import random
 import threading
-
+import multiprocessing
 url = "http://10.10.10.11:8888/collectd"
 #url = "http://10.0.0.98:8888/collectd"
 
@@ -71,28 +71,6 @@ def get_zero_or_one():
         return 1
     else:
         return 0
-
-
-class myPostThread (threading.Thread):
-    def __init__(self, threadID, name, numbers_per_second,json_str, flag):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.numbers_per_second= numbers_per_second
-        self.json_str=json_str
-        self.flag=flag
-    def run(self):
-        print "Starting " + self.name
-        if self.flag =='_n_':
-            post_metrics_numbers_per_second(self.numbers_per_second, self.json_str)
-        elif self.flag=='_r_':
-            pass
-        elif self.flag=='_n_b_':
-            pass
-        else:
-            pass
-        print "Exiting " + self.name
-
 
 def get_msg_of_specific_bytes(bytes_per_second):
     msg =''
@@ -261,11 +239,34 @@ def kill_recording_process():
     #subprocess.call(top_kill, shell=True)
 
 
-#Usage: postMetrics -n <bytes/seconds> or -b <numbersOfMsg/second> with -j <json_content>
+class myPostThread (threading.Thread):
+    def __init__(self, threadID, name, numbers_per_second,json_str, flag):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.numbers_per_second= numbers_per_second
+        self.json_str=json_str
+        self.flag=flag
+    def run(self):
+        print "Starting " + self.name
+        if self.flag =='_n_':
+            post_metrics_numbers_per_second(self.numbers_per_second, self.json_str)
+        elif self.flag=='_r_':
+            pass
+        elif self.flag=='_n_b_':
+            pass
+        else:
+            pass
+        print "Exiting " + self.name
 
 def createThread( n ,numbers_per_second,json_str,flag ):
     for i in range(0,n):
         myPostThread(i, "Thread-"+str(i), numbers_per_second,json_str,flag).start()
+
+def multiProcess( n ,numbers_per_second,json_str ):
+    for i in range(0,n):
+        p = multiprocessing.Process(target=post_metrics_numbers_per_second, args=(numbers_per_second,json_str,))
+        p.start()
 
 def main():
   if len(sys.argv) <= 1:
@@ -344,12 +345,14 @@ def main():
       #createThread( 10 ,numbers_per_second,json_str,'_n_')
       #time.sleep(60)
       #createThread( 10 ,numbers_per_second,json_str,'_n_')
-      #time.sleep(60)
+
+      #multiProcess( 10 ,numbers_per_second,json_str )
+
       #Run 5 mins
       while exec_time_left < 300:
           post_metrics_numbers_per_second(numbers_per_second, json_str)
           exec_time_left= time.time() - begin_time
-          print('exec_time_left:',exec_time_left)
+          print('exec_time_left---exec_time_left---exec_time_left : ', exec_time_left)
 
       kill_recording_process()
 
